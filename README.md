@@ -1,109 +1,63 @@
-# Catalogue Service — Unit Tests with CI/CD Pipeline
-
-RoboShop catalogue microservice with unit tests,
-Docker containerisation, SonarQube code quality
-scanning, and Jenkins CI/CD pipeline integration.
-
+# Catalogue Service — Unit Tests with CI/CD
+ 
+RoboShop catalogue microservice with unit tests, Docker build,
+SonarQube quality scan, and Jenkins CI/CD pipeline to EKS.
+ 
 ---
-
-## What is in This Repo
-
+ 
+## Files
+ 
 | File/Folder | Purpose |
 |-------------|---------|
-| `Jenkinsfile` | CI/CD pipeline using Jenkins Shared Library |
-| `Dockerfile` | Container image build configuration |
-| `sonar-project.properties` | SonarQube code quality configuration |
-| `package.json` | Node.js dependencies and scripts |
-| `server.js` | Catalogue microservice application |
-| `test/` | Unit test suite |
-| `db/` | Database schema and seed data |
-
+| Jenkinsfile | CI/CD pipeline via Jenkins Shared Library |
+| Dockerfile | Container image build |
+| sonar-project.properties | SonarQube configuration |
+| test/ | Unit test suite |
+| db/ | Database schema and seed data |
+ 
 ---
-
-## CI/CD Pipeline
-
-This repo uses the
-[jenkins-shared-library](https://github.com/mamatha-ravi/jenkins-shared-library)
-for its pipeline via `nodeJSEKSPipeline()`.
-
+ 
+## Pipeline
+ 
+Uses [jenkins-shared-library](https://github.com/mamatha-ravi/jenkins-shared-library):
+ 
 ```groovy
-def configMap = [
-  project:   "roboshop",
-  component: "catalogue"
-]
-
+@Library('jenkins-shared-library') _
+def configMap = [project: "roboshop", component: "catalogue"]
 nodeJSEKSPipeline(configMap)
 ```
-
-### Pipeline Stages
-Code Push to GitHub
-↓
-Jenkins detects branch
-↓
-Calls nodeJSEKSPipeline from Shared Library
-↓
-Install dependencies — npm install
-↓
-Run unit tests — npm test
-↓
-SonarQube code quality scan
-↓
-Docker build and tag
-↓
-Push to AWS ECR
-↓
-Deploy to Kubernetes (EKS)
+ 
+Stages: npm install → tests → SonarQube → Docker build → Trivy → ECR → Helm deploy to EKS
+ 
 ---
-
-## How to Run Locally
-
+ 
+## Branch Protection
+ 
+main branch is protected:
+- All scans must pass before merge
+- PR required — no direct push to main
+ 
+---
+ 
+## How to Run
+ 
 ```bash
-# Install dependencies
 npm install
-
-# Run unit tests
 npm test
-
-# Start the service
-node server.js
+ docker build -t ${acc_id}.dkr.ecr.${region}.amazonaws.com/${project}/${component}:${appVersion} .
+ helm upgrade --install ${component} -f values-prod.yaml -n ${project}-prod --atomic --wait --timeout=5m .
 ```
-
-## How to Build Docker Image
-
-```bash
-docker build -t catalogue:latest .
-docker run -p 8080:8080 catalogue:latest
-```
-
+ 
 ---
-
+ 
 ## Tech Stack
-
-| Category | Technology |
-|----------|------------|
-| Runtime | Node.js |
-| Testing | Mocha / Jest |
-| CI/CD | Jenkins + Shared Library |
-| Container | Docker |
-| Code Quality | SonarQube |
-| Registry | AWS ECR |
-| Orchestration | Kubernetes on EKS |
-
+ 
+Node.js · Docker · Jenkins · SonarQube · Trivy · AWS ECR · Kubernetes .Helm
+ 
 ---
-
-## Related Repos
-
-| Repo | Description |
-|------|-------------|
-| [jenkins-shared-library](https://github.com/mamatha-ravi/jenkins-shared-library) | Shared pipeline library used by this repo |
-| [roboshop-infra-dev](https://github.com/mamatha-ravi/roboshop-infra-dev) | Full RoboShop AWS infrastructure |
-| [terraform-aws-eks](https://github.com/mamatha-ravi/terraform-aws-eks) | EKS cluster this service deploys to |
-
----
-
+ 
 ## Author
-
+ 
 Mamatha Ravipati
-📍 Hyderabad, India
-📧 mamata.r@gmail.com
-🔗 [github.com/mamatha-ravi](https://github.com/mamatha-ravi)
+📍 Hyderabad, India | 📧 mamata.r@gmail.com
+🔗 github.com/mamatha-ravi
